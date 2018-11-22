@@ -6,10 +6,19 @@ The public API of this library consists of the functions declared in file
 [h3api.h](./src/h3lib/include/h3api.h).
 
 ## [Unreleased]
-### Fixed
-- Added #include <stdio.h> to benchmark.h
+### Changed
+- Indexes in deleted pentagon subsequences are not considered valid.
+
+## [3.2.0] - 2018-10-04
 ### Added
-- Benchmarks for the kRing method for k's of size 10, 20, 30, and 40.
+- `experimentalH3ToLocalIj` function for getting local coordinates for an index. (#102)
+- `experimentalLocalIjToH3` function for getting an index from local coordinates. (#102)
+- Benchmarks for the kRing method for k's of size 10, 20, 30, and 40. (#142, #144)
+### Changed
+- Internal `h3ToIjk` function renamed to `h3ToLocalIjk`. (#102)
+- `h3ToIjk` filter application replaced with `h3ToLocalIj`. (#102)
+### Fixed
+- Added `#include <stdio.h>` to `benchmark.h` (#142)
 
 ## [3.1.1] - 2018-08-29
 ### Fixed
