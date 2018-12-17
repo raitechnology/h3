@@ -1,0 +1,13 @@
+Source: h3
+Section: devel
+Priority: optional
+Maintainer: Chris Anderson <chris@raitechnology.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.5
+Homepage: https://www.github.com/raitechnology/raikv
+
+Package: h3
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Library for geo spatual indexing
+ Uber's hexigonal geo indexing.

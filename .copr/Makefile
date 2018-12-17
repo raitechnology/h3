@@ -2,30 +2,34 @@ outdir ?= rpmbuild/SRPMS
 name   := h3
 spec   := rpm/$(name).spec
 date   := $(shell date +"%a %b %d %Y")
+rpmdir := $(shell pwd)
 
 major_num   := 3
 minor_num   := 2
 patch_num   := 0
-build_num   := 1
+build_num   := 2
 version     := $(major_num).$(minor_num).$(patch_num)
 ver_build   := $(version)-$(build_num)
+name_ver    := $(name)-$(ver_build)
+rpm_src_dir := rpmbuild/SOURCES/$(name)-$(version)
+srctree     := .copr GNUmakefile deb rpm
 
 .PHONY: srpm
 srpm: $(outdir)/$(name)-$(version)-$(release).src.rpm
 
-$(outdir)/$(name)-$(version)-$(release).src.rpm: rpmbuild/SOURCES/$(name)-$(ver_build).tar.gz
+$(outdir)/$(name)-$(version)-$(release).src.rpm: rpmbuild/SOURCES/$(name_ver).tar.gz
 	@mkdir -p $(outdir)
-	rpmbuild -D'_srcrpmdir $(outdir)' -D'_sourcedir rpmbuild/SOURCES' -bs rpmbuild/SPECS/$(name).spec
+	rpmbuild --root $(rpmdir) -D'_srcrpmdir $(outdir)' -D'_sourcedir rpmbuild/SOURCES' -bs rpmbuild/SPECS/$(name).spec
 
-rpmbuild/SOURCES/$(name)-$(ver_build).tar.gz:
-	mkdir -p rpmbuild/{RPMS,SRPMS,BUILD,SOURCES,SPECS}
+rpmbuild/SOURCES/$(name_ver).tar.gz:
+	mkdir -p rpmbuild/RPMS rpmbuild/SRPMS rpmbuild/BUILD rpmbuild/SOURCES rpmbuild/SPECS
 	sed -e "s/99999/${build_num}/" \
 	    -e "s/999.999/${version}/" \
 	    -e "s/__DATE__/${date}/" < rpm/$(name).spec > rpmbuild/SPECS/$(name).spec
-	mkdir -p rpmbuild/SOURCES/$(name)-${version}/include
-	mkdir -p rpmbuild/SOURCES/$(name)-${version}/src/h3lib
-	ln -sf ../../../GNUmakefile ../../../.copr rpmbuild/SOURCES/$(name)-${version}/
-	ln -sf ../../../../../src/h3lib/lib rpmbuild/SOURCES/$(name)-${version}/src/h3lib/lib
-	ln -sf ../../../../src/h3lib/include rpmbuild/SOURCES/$(name)-${version}/include/h3lib
-	( cd rpmbuild/SOURCES && tar chzf $(name)-${ver_build}.tar.gz --exclude=".*.sw*" $(name)-${version} && rm -r -f $(name)-${version} )
+	mkdir -p $(rpm_src_dir)/include
+	mkdir -p $(rpm_src_dir)/src/h3lib
+	for i in $(srctree) ; do ln -sf ../../../$$i $(rpm_src_dir) ; done
+	ln -sf ../../../../../src/h3lib/lib $(rpm_src_dir)/src/h3lib/lib
+	ln -sf ../../../../src/h3lib/include $(rpm_src_dir)/include/h3lib
+	( cd rpmbuild/SOURCES && tar chzf $(name_ver).tar.gz --exclude=".*.sw*" $(name)-${version} && rm -r -f $(name)-${version} )
 

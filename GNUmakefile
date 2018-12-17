@@ -2,9 +2,10 @@ lsb_dist     := $(shell if [ -x /usr/bin/lsb_release ] ; then lsb_release -is ; 
 lsb_dist_ver := $(shell if [ -x /usr/bin/lsb_release ] ; then lsb_release -rs | sed 's/[.].*//' ; fi)
 uname_m      := $(shell uname -m)
 
-short_dist_lc := $(patsubst CentOS,rh,$(patsubst RedHat,rh,\
-                   $(patsubst Fedora,fc,$(patsubst Ubuntu,ub,\
-                     $(patsubst Debian,deb,$(patsubst SUSE,ss,$(lsb_dist)))))))
+short_dist_lc := $(patsubst CentOS,rh,$(patsubst RedHatEnterprise,rh,\
+                   $(patsubst RedHat,rh,\
+                     $(patsubst Fedora,fc,$(patsubst Ubuntu,ub,\
+                       $(patsubst Debian,deb,$(patsubst SUSE,ss,$(lsb_dist))))))))
 short_dist    := $(shell echo $(short_dist_lc) | tr a-z A-Z)
 rpm_os        := $(short_dist_lc)$(lsb_dist_ver).$(uname_m)
 
@@ -34,6 +35,7 @@ cpplink     := $(CC)
 gcc_wflags  := -Wall -Wextra -Werror
 fpicflags   := -fPIC
 soflag      := -shared
+rpath       := -Wl,-rpath,$(libd)
 
 ifdef DEBUG
 default_cflags := -ggdb -std=gnu99
@@ -41,7 +43,7 @@ else
 default_cflags := -ggdb -O2 -std=gnu99
 endif
 # rpmbuild uses RPM_OPT_FLAGS
-CFLAGS ?= $(default_cflags)
+CFLAGS := $(default_cflags)
 #RPM_OPT_FLAGS ?= $(default_cflags)
 #CFLAGS ?= $(RPM_OPT_FLAGS)
 cflags := $(gcc_wflags) $(CFLAGS) $(arch_cflags)
@@ -50,18 +52,23 @@ INCLUDES    ?= -Isrc/h3lib/include -Iinclude/h3lib
 includes    := $(INCLUDES)
 DEFINES     ?= -DH3_HAVE_ALLOCA -DH3_HAVE_VLA -DH3_PREFIX=""
 defines     := $(DEFINES)
+math_lib    := -lm
 
 .PHONY: everything
 everything: all
 
-# version vars
+# copr/fedora build (with version env vars)
+# copr uses this to generate a source rpm with the srpm target
 -include .copr/Makefile
+
+# debian build (debuild)
+# target for building installable deb: dist_dpkg
+-include deb/Makefile
 
 all_exes    :=
 all_libs    :=
 all_dlls    :=
 all_depends :=
-#defines     := -DLC_VER=$(ver_build)
 
 libh3_files := algos coordijk bbox polygon h3Index vec2d vec3d \
 	       linkedGeo geoCoord h3UniEdge mathExtensions vertexGraph \
@@ -82,6 +89,8 @@ all_depends += $(libh3_deps)
 
 all_dirs := $(bind) $(libd) $(objd) $(dependd)
 
+# the default targets
+.PHONY: all
 all: $(all_libs) $(all_dlls) $(all_exes)
 
 # create directories
@@ -94,12 +103,20 @@ clean:
 	rm -r -f $(bind) $(libd) $(objd) $(dependd)
 	if [ "$(build_dir)" != "." ] ; then rmdir $(build_dir) ; fi
 
+.PHONY: clean_dist
+clean_dist:
+	rm -rf dpkgbuild rpmbuild
+
+.PHONY: clean_all
+clean_all: clean clean_dist
+
 $(dependd)/depend.make: $(dependd) $(all_depends)
 	@echo "# depend file" > $(dependd)/depend.make
 	@cat $(all_depends) >> $(dependd)/depend.make
 
 .PHONY: dist_bins
 dist_bins: $(all_libs) $(all_dlls)
+	chrpath -d $(libd)/libh3.so
 
 .PHONY: dist_rpm
 dist_rpm: srpm
@@ -112,6 +129,30 @@ depend: $(dependd)/depend.make
 # dependencies made by 'make depend'
 -include $(dependd)/depend.make
 
+ifeq ($(DESTDIR),)
+# 'sudo make install' puts things in /usr/local/lib, /usr/local/include
+install_prefix = /usr/local
+else
+# debuild uses DESTDIR to put things into debian/libdecnumber/usr
+install_prefix = $(DESTDIR)/usr
+endif
+
+install: dist_bins
+	install -d $(install_prefix)/lib
+	install -d $(install_prefix)/include/h3lib
+	for f in $(libd)/libh3.* ; do \
+	if [ -h $$f ] ; then \
+	cp -a $$f $(install_prefix)/lib ; \
+	else \
+	install $$f $(install_prefix)/lib ; \
+	fi ; \
+	done
+	if [ -d include ] ; then \
+	install -m 644 include/h3lib/*.h $(install_prefix)/include/h3lib ; \
+	else \
+	install -m 644 src/h3lib/include/*.h $(install_prefix)/include/h3lib ; \
+	fi
+
 $(objd)/%.o: src/h3lib/lib/%.c
 	$(cc) $(cflags) $(fpicflags) $(includes) $(defines) $($(notdir $*)_includes) $($(notdir $*)_defines) -c $< -o $@
 
@@ -122,7 +163,7 @@ $(libd)/%.a:
 	ar rc $@ $($(*)_objs)
 
 $(libd)/%.so:
-	$(cpplink) $(soflag) $(cflags) -o $@.$($(*)_spec) -Wl,-soname=$(@F).$($(*)_ver) $($(*)_dbjs) $($(*)_dlnk) $(cpp_dll_lnk) $(sock_lib) $(math_lib) $(thread_lib) $(malloc_lib) $(dynlink_lib) && \
+	$(cpplink) $(soflag) $(rpath) $(cflags) -o $@.$($(*)_spec) -Wl,-soname=$(@F).$($(*)_ver) $($(*)_dbjs) $($(*)_dlnk) $(cpp_dll_lnk) $(sock_lib) $(math_lib) $(thread_lib) $(malloc_lib) $(dynlink_lib) && \
 	cd $(libd) && ln -f -s $(@F).$($(*)_spec) $(@F).$($(*)_ver) && ln -f -s $(@F).$($(*)_ver) $(@F)
 
 $(dependd)/%.d: src/h3lib/lib/%.c
