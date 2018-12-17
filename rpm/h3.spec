@@ -4,7 +4,7 @@ Release:	99999%{?dist}
 Summary:	Uber H3 Geospatual Indexing
 
 Group:		Development/Libraries
-License:	BSD
+License:	ASL 2.0
 URL:		https://github.com/injinj/%{name}
 Source0:	%{name}-%{version}-99999.tar.gz
 BuildRoot:	${_tmppath}
