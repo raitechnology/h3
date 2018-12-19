@@ -9,6 +9,7 @@ URL:		https://github.com/injinj/%{name}
 Source0:	%{name}-%{version}-99999.tar.gz
 BuildRoot:	${_tmppath}
 BuildRequires:  gcc-c++
+BuildRequires:  chrpath
 Prefix:	        /usr
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -56,5 +57,5 @@ fi
 /sbin/ldconfig
 
 %changelog
-* __DATE__ <gchrisanderson@gmail.com>
+* __DATE__ <chris@raitechnology.com>
 - Hello world
