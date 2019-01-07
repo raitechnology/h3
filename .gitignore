@@ -107,3 +107,4 @@ KML/res*centers.kml
 
 # dist
 /rpmbuild
+/dpkgbuild
