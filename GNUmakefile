@@ -94,6 +94,12 @@ all_dirs := $(bind) $(libd) $(objd) $(dependd)
 .PHONY: all
 all: $(all_libs) $(all_dlls) $(all_exes)
 
+src/h3lib/include/h3api.h: src/h3lib/include/h3api.h.in VERSION
+	sed -e "s/@H3_VERSION_MAJOR@/$(major_num)/" \
+	    -e "s/@H3_VERSION_MINOR@/$(minor_num)/" \
+	    -e "s/@H3_VERSION_PATCH@/$(patch_num)/" \
+	    src/h3lib/include/h3api.h.in > src/h3lib/include/h3api.h
+
 # create directories
 $(dependd):
 	@mkdir -p $(all_dirs)
@@ -111,7 +117,7 @@ clean_dist:
 .PHONY: clean_all
 clean_all: clean clean_dist
 
-$(dependd)/depend.make: $(dependd) $(all_depends)
+$(dependd)/depend.make: $(dependd) src/h3lib/include/h3api.h $(all_depends)
 	@echo "# depend file" > $(dependd)/depend.make
 	@cat $(all_depends) >> $(dependd)/depend.make
 
