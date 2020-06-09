@@ -6,32 +6,21 @@ The source of the pages in the documentation is in the [docs](../docs) directory
 
 ## Building Locally
 
-Building the documentation requires Node.js. To build and view the H3 documentation, 
+Building the documentation requires Node.js. To build and view the H3 documentation,
 run the following from `./website`:
 
 ```
-npm install
-npm run build
-npm start
+yarn
+yarn run build
 ```
+
+You will then be able to open `public/index.html` in your browser. Note that images
+will not render because they expect a `/h3/` path prefix.
 
 ## Updating the H3 Website
 
-From `./website`:
+Make sure your `gh-pages` branch has its remote set to the upstream repo, then
 
-Make sure your `gh-pages` branch is up to date with the upstream repo:
 ```
-git checkout gh-pages
-git pull upstream gh-pages
-```
-
-Switch back to `master` and run the build:
-```
-git checkout master
-./scripts/build-to-gh-pages.sh
-```
-
-You're now on branch `gh-pages` again. Push changes to the live site:
-```
-git push upstream gh-pages:gh-pages
+make publish-website
 ```

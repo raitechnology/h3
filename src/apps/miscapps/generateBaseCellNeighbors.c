@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Uber Technologies, Inc.
+ * Copyright 2016-2019 Uber Technologies, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ static void generate() {
 
     for (int i = 0; i < NUM_BASE_CELLS; i++) {
         if (!_isBaseCellPentagon(i)) {
-            for (int dir = 0; dir <= NUM_DIRS; dir++) {
+            for (int dir = CENTER_DIGIT; dir <= NUM_DIRS; dir++) {
                 FaceIJK fijk;
                 _baseCellToFaceIjk(i, &fijk);
                 _neighbor(&fijk.coord, dir);
@@ -161,7 +161,7 @@ static void generate() {
                         if (dir == K_AXES_DIGIT) {
                             // 4 and 117 are 'polar' type pentagons, which have
                             // some different behavior.
-                            if (i == 4 || i == 117) {
+                            if (_isBaseCellPentagon(i)) {
                                 _ijkRotate60cw(&ijk);
                                 _ijkRotate60cw(&ijk);
                             } else {
@@ -172,7 +172,7 @@ static void generate() {
 
                         // Adjust for the deleted k-subsequence distortion
                         int rotAdj = 0;
-                        if (i == 4 || i == 117) {
+                        if (_isBaseCellPolarPentagon(i)) {
                             // 'polar' type pentagon with all faces pointing
                             // towards i
                             if (dir == IK_AXES_DIGIT) {

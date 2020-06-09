@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Uber Technologies, Inc.
+ * Copyright 2016-2019 Uber Technologies, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@
 #define UTILITY_H
 
 #include <stdio.h>
+
+#include "coordijk.h"
 #include "h3api.h"
 
 #define BUFF_SIZE 256
@@ -28,10 +30,11 @@
 /** Macro: Get the size of a fixed-size array */
 #define ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 
-// prototypes
 void error(const char* msg);
 void h3Print(H3Index h);    // prints as integer
 void h3Println(H3Index h);  // prints as integer
+
+void coordIjkPrint(const CoordIJK* c);
 
 void geoToStringRads(const GeoCoord* p, char* str);
 void geoToStringDegs(const GeoCoord* p, char* str);
@@ -45,8 +48,14 @@ void geoBoundaryPrint(const GeoBoundary* b);
 void geoBoundaryPrintln(const GeoBoundary* b);
 int readBoundary(FILE* f, GeoBoundary* b);
 
+void randomGeo(GeoCoord* p);
+
 void iterateAllIndexesAtRes(int res, void (*callback)(H3Index));
 void iterateAllIndexesAtResPartial(int res, void (*callback)(H3Index),
                                    int maxBaseCell);
+void iterateBaseCellIndexesAtRes(int res, void (*callback)(H3Index),
+                                 int baseCell);
+
+int countActualHexagons(H3Index* hexagons, int numHexagons);
 
 #endif

@@ -3,9 +3,81 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 The public API of this library consists of the functions declared in file
-[h3api.h](./src/h3lib/include/h3api.h).
+[h3api.h.in](./src/h3lib/include/h3api.h.in).
 
 ## [Unreleased]
+### Added
+- `H3_MEMORY_PREFIX` CMake option for replacing the memory management functions used in H3. (#317)
+### Fixed
+- Removed duplicate include statements. (#333)
+- Fixed macro `H3_DIGIT_MASK_NEGATIVE`. (#329)
+
+## [3.6.3] - 2020-01-21
+### Fixed
+- `compact` detects and fails on cases with duplicated input indexes. (#299)
+### Changed
+- `h3IsValid` returns false for indexes that have non-zero reserved bits. (#300)
+- `h3IsValid` and `h3UnidirectionalEdgeIsValid` return false for indexes with the high bit set. (#300)
+
+## [3.6.2] - 2019-12-9
+- Revert new `polyfill` algorithm until reported issues are fixed. (#293)
+
+## [3.6.1] - 2019-11-11
+### Fixed
+- `compact` handles zero length input correctly. (#278)
+- `bboxHexRadius` scaling factor adjusted to guarantee containment for `polyfill`. (#279)
+- `polyfill` new algorithm for up to 3x perf boost. (#282)
+- Fix CMake targets for KML generation. (#285)
+
+## [3.6.0] - 2019-08-12
+### Added
+- `h3ToCenterChild` function to find center child at given resolution (#267)
+- `getPentagonIndexes` (and `pentagonIndexCount`) function to find pentagons at given resolution (#267)
+### Fixed
+- Fix bounds check for local IJ coordinates (#271)
+
+## [3.5.0] - 2019-07-22
+### Added
+- CMake options for excluding filter applications or benchmarks from the build. (#247)
+- `h3GetFaces` function to find icosahedron faces for an index, and helper function `maxFaceCount` (#253)
+### Changed
+- Argument parsing for all filter applications is more flexible. (#238)
+### Fixed
+- Fix printing program name in `h3ToHier` error messages. (#254)
+
+## [3.4.4] - 2019-05-30
+### Changed
+- Local coordinate spaces cannot cross more than one icosahedron edge. (#234)
+- All dynamic internal memory allocations happen on the heap instead of the stack. (#235)
+- Argument parsing for `h3ToGeo`, `geoToH3`, and `h3ToGeoBoundary` is more flexible. (#227)
+
+## [3.4.3] - 2019-05-02
+### Added
+- `localIjToH3` filter application (#222)
+- An option to print distances in the `kRing` filter application (#222)
+### Changed
+- Arguments parsing for `kRing` filter application is more flexible. (#224)
+### Fixed
+- `benchmarkPolyfill` allocates its memory on the heap (#198)
+- Fixed constraints of vertex longitudes (#213)
+- Zero only input to `uncompact` does not produce an error (#223)
+
+## [3.4.2] - 2019-02-21
+### Changed
+- `binding-functions` build target generates an ASCII file on Windows (#193)
+
+## [3.4.1] - 2019-02-15
+### Fixed
+- `binding-functions` build target fixed when running the build out of source (#188)
+
+## [3.4.0] - 2019-01-23
+### Added
+- `getRes0Indexes` function for getting all base cells, and helper function `res0IndexCount` (#174)
+- Include defined constants for current library version (#173)
+
+## [3.3.0] - 2018-12-25
+### Added
+- `h3Line` and `h3LineSize` functions for getting the line of indexes between some start and end (inclusive) (#165)
 ### Changed
 - Indexes in deleted pentagon subsequences are not considered valid.
 

@@ -26,9 +26,8 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "constants.h"
 
-#define NUM_PENTAGONS 12
+#include "constants.h"
 
 /**
  * Generates and prints the numHexagons table.

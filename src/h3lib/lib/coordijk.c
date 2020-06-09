@@ -19,10 +19,12 @@
  */
 
 #include "coordijk.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "constants.h"
 #include "geoCoord.h"
 #include "mathExtensions.h"
@@ -530,5 +532,25 @@ void ijToIjk(const CoordIJ* ij, CoordIJK* ijk) {
     ijk->j = ij->j;
     ijk->k = 0;
 
+    _ijkNormalize(ijk);
+}
+
+/**
+ * Convert IJK coordinates to cube coordinates, in place
+ * @param ijk Coordinate to convert
+ */
+void ijkToCube(CoordIJK* ijk) {
+    ijk->i = -ijk->i + ijk->k;
+    ijk->j = ijk->j - ijk->k;
+    ijk->k = -ijk->i - ijk->j;
+}
+
+/**
+ * Convert cube coordinates to IJK coordinates, in place
+ * @param ijk Coordinate to convert
+ */
+void cubeToIjk(CoordIJK* ijk) {
+    ijk->i = -ijk->i;
+    ijk->k = 0;
     _ijkNormalize(ijk);
 }

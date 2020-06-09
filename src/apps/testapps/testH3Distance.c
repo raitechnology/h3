@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Uber Technologies, Inc.
+ * Copyright 2018-2019 Uber Technologies, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,46 +22,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "algos.h"
 #include "baseCells.h"
 #include "constants.h"
 #include "h3Index.h"
 #include "h3api.h"
 #include "localij.h"
-#include "stackAlloc.h"
 #include "test.h"
 #include "utility.h"
-
-static const int MAX_DISTANCES[] = {1, 2, 5, 12, 19, 26};
-
-static void h3Distance_identity_assertions(H3Index h3) {
-    t_assert(H3_EXPORT(h3Distance)(h3, h3) == 0, "distance to self is 0");
-}
-
-static void h3Distance_kRing_assertions(H3Index h3) {
-    int r = H3_GET_RESOLUTION(h3);
-    t_assert(r <= 5, "resolution supported by test function (kRing)");
-    int maxK = MAX_DISTANCES[r];
-
-    int sz = H3_EXPORT(maxKringSize)(maxK);
-    STACK_ARRAY_CALLOC(H3Index, neighbors, sz);
-    STACK_ARRAY_CALLOC(int, distances, sz);
-
-    H3_EXPORT(kRingDistances)(h3, maxK, neighbors, distances);
-
-    for (int i = 0; i < sz; i++) {
-        if (neighbors[i] == 0) {
-            continue;
-        }
-
-        int calculatedDistance = H3_EXPORT(h3Distance)(h3, neighbors[i]);
-
-        // Don't consider indexes where h3Distance reports failure to
-        // generate
-        t_assert(calculatedDistance == distances[i] || calculatedDistance == -1,
-                 "kRingDistances matches h3Distance");
-    }
-}
 
 SUITE(h3Distance) {
     // Some indexes that represent base cells. Base cells
@@ -114,21 +83,6 @@ SUITE(h3Distance) {
                  "distance in res 2 across pentagon");
         t_assert(H3_EXPORT(h3Distance)(origin, destination) == -1,
                  "distance in res 2 across pentagon (reversed)");
-    }
-
-    TEST(h3Distance_identity) {
-        iterateAllIndexesAtRes(0, h3Distance_identity_assertions);
-        iterateAllIndexesAtRes(1, h3Distance_identity_assertions);
-        iterateAllIndexesAtRes(2, h3Distance_identity_assertions);
-    }
-
-    TEST(h3Distance_kRing) {
-        iterateAllIndexesAtRes(0, h3Distance_kRing_assertions);
-        iterateAllIndexesAtRes(1, h3Distance_kRing_assertions);
-        iterateAllIndexesAtRes(2, h3Distance_kRing_assertions);
-        // Don't iterate all of res 3, to save time
-        iterateAllIndexesAtResPartial(3, h3Distance_kRing_assertions, 27);
-        // Further resolutions aren't tested to save time.
     }
 
     TEST(h3DistanceBaseCells) {

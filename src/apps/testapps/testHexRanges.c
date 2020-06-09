@@ -15,6 +15,7 @@
  */
 
 #include <stdlib.h>
+
 #include "algos.h"
 #include "test.h"
 
@@ -25,6 +26,7 @@ SUITE(hexRanges) {
 
     H3Index k1[] = {0x89283080ddbffff, 0x89283080c37ffff, 0x89283080c27ffff,
                     0x89283080d53ffff, 0x89283080dcfffff, 0x89283080dc3ffff};
+    H3Index withPentagon[] = {0x8029fffffffffff, 0x801dfffffffffff};
 
     TEST(identityKRing) {
         int err;
@@ -73,5 +75,14 @@ SUITE(hexRanges) {
             }
         }
         free(allKrings2);
+    }
+
+    TEST(failed) {
+        int err;
+        H3Index* allKrings = calloc(2 * (1 + 6), sizeof(H3Index));
+        err = H3_EXPORT(hexRanges)(withPentagon, 2, 1, allKrings);
+
+        t_assert(err != 0, "Expected error on hexRanges");
+        free(allKrings);
     }
 }

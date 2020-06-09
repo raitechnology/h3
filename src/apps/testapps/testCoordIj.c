@@ -22,13 +22,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "algos.h"
 #include "baseCells.h"
 #include "constants.h"
 #include "h3Index.h"
 #include "h3api.h"
 #include "localij.h"
-#include "stackAlloc.h"
 #include "test.h"
 #include "utility.h"
 
@@ -59,6 +59,20 @@ SUITE(coordIj) {
             ijToIjk(&ij, &recovered);
 
             t_assert(_ijkMatches(&ijk, &recovered),
+                     "got same ijk coordinates back");
+        }
+    }
+
+    TEST(ijkToCube_roundtrip) {
+        for (Direction dir = CENTER_DIGIT; dir < NUM_DIGITS; dir++) {
+            CoordIJK ijk = {0};
+            _neighbor(&ijk, dir);
+            CoordIJK original = {ijk.i, ijk.j, ijk.k};
+
+            ijkToCube(&ijk);
+            cubeToIjk(&ijk);
+
+            t_assert(_ijkMatches(&ijk, &original),
                      "got same ijk coordinates back");
         }
     }

@@ -1,6 +1,8 @@
+<img align="right" src="https://uber.github.io/img/h3Logo-color.svg" alt="H3 Logo" width="200">
+
 # H3: A Hexagonal Hierarchical Geospatial Indexing System
 
-[![Build Status](https://travis-ci.org/uber/h3.svg?branch=master)](https://travis-ci.org/uber/h3)
+[![Build Status](https://travis-ci.com/uber/h3.svg?branch=master)](https://travis-ci.com/uber/h3)
 [![Build status](https://ci.appveyor.com/api/projects/status/61431y4sc5w0tsuk/branch/master?svg=true)](https://ci.appveyor.com/project/Uber/h3/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/uber/h3/badge.svg?branch=master)](https://coveralls.io/github/uber/h3?branch=master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -16,7 +18,11 @@ Documentation is available at [https://uber.github.io/h3/](https://uber.github.i
 
 We recommend using prebuilt bindings if they are available for your programming language. Bindings for [Go](https://github.com/uber/h3-go), [Java](https://github.com/uber/h3-java), [JavaScript](https://github.com/uber/h3-js), [Python](https://github.com/uber/h3-py), and [others](https://uber.github.io/h3/#/documentation/community/bindings) are available.
 
-If no bindings are available, you can only install H3 by building from source.
+On macOS, you can install H3 using brew:
+```
+brew install h3
+```
+Otherwise, to build H3 from source, please see the following instructions.
 
 ### Building from source
 
@@ -88,8 +94,7 @@ To build the documentation website, see the [website/](./website/) directory.
 To get the H3 index for some location:
 
 ```
-./bin/geoToH3 10
-40.689167 -74.044444
+./bin/geoToH3 --resolution 10 --latitude 40.689167 --longitude -74.044444
 ```
 
 10 is the H3 resolution, between 0 (coarsest) and 15 (finest). The coordinates entered are the latitude and longitude, in degrees, you want the index for (these coordinates are the Statue of Liberty).  You should get an H3 index as output, like `8a2a1072b59ffff`.
@@ -97,8 +102,7 @@ To get the H3 index for some location:
 You can then take this index and get some information about it, for example:
 
 ```
-./bin/h3ToGeoBoundary
-8a2a1072b59ffff
+./bin/h3ToGeoBoundary --index 8a2a1072b59ffff
 ```
 
 This will produce the vertices of the hexagon at this location:
@@ -118,8 +122,7 @@ This will produce the vertices of the hexagon at this location:
 You can get the center coordinate of the hexagon like so:
 
 ```
-./bin/h3ToGeo
-8a2a1072b59ffff
+./bin/h3ToGeo --index 8a2a1072b59ffff
 ```
 
 This will produce some coordinate:

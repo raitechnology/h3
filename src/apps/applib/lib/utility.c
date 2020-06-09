@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Uber Technologies, Inc.
+ * Copyright 2016-2019 Uber Technologies, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@
  */
 
 #include "utility.h"
+
 #include <assert.h>
 #include <inttypes.h>
-#include <stackAlloc.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "geoCoord.h"
+#include <string.h>
+#include <time.h>
+
+#include "coordijk.h"
 #include "h3Index.h"
 #include "h3api.h"
 
@@ -43,6 +46,13 @@ void h3Print(H3Index h) { printf("%" PRIx64, h); }
  * Prints the H3Index and a newline
  */
 void h3Println(H3Index h) { printf("%" PRIx64 "\n", h); }
+
+/**
+ * Prints the CoordIJK
+ */
+void coordIjkPrint(const CoordIJK* c) {
+    printf("[%d, %d, %d]", c->i, c->j, c->k);
+}
 
 /**
  * Assumes `str` is big enough to hold the result.
@@ -182,18 +192,59 @@ void iterateAllIndexesAtResPartial(int res, void (*callback)(H3Index),
                                    int baseCells) {
     assert(baseCells <= NUM_BASE_CELLS);
     for (int i = 0; i < baseCells; i++) {
-        H3Index bc;
-        setH3Index(&bc, 0, i, 0);
-        int childrenSz = H3_EXPORT(maxUncompactSize)(&bc, 1, res);
-        STACK_ARRAY_CALLOC(H3Index, children, childrenSz);
-        H3_EXPORT(uncompact)(&bc, 1, children, childrenSz, res);
+        iterateBaseCellIndexesAtRes(res, callback, i);
+    }
+}
 
-        for (int j = 0; j < childrenSz; j++) {
-            if (children[j] == 0) {
-                continue;
-            }
+/**
+ * Call the callback for every index at the given resolution in a
+ * specific base cell
+ */
+void iterateBaseCellIndexesAtRes(int res, void (*callback)(H3Index),
+                                 int baseCell) {
+    H3Index bc;
+    setH3Index(&bc, 0, baseCell, 0);
+    int childrenSz = H3_EXPORT(maxUncompactSize)(&bc, 1, res);
+    H3Index* children = calloc(childrenSz, sizeof(H3Index));
+    H3_EXPORT(uncompact)(&bc, 1, children, childrenSz, res);
 
-            (*callback)(children[j]);
+    for (int j = 0; j < childrenSz; j++) {
+        if (children[j] == 0) {
+            continue;
+        }
+
+        (*callback)(children[j]);
+    }
+
+    free(children);
+}
+
+/**
+ * Generates a random lat/lon pair.
+ *
+ * @param g Lat/lon will be placed here.
+ */
+void randomGeo(GeoCoord* g) {
+    static int init = 0;
+    if (!init) {
+        srand((unsigned int)time(0));
+        init = 1;
+    }
+
+    g->lat = H3_EXPORT(degsToRads)(
+        (((float)rand() / (float)(RAND_MAX)) * 180.0) - 90.0);
+    g->lon = H3_EXPORT(degsToRads)((float)rand() / (float)(RAND_MAX)) * 360.0;
+}
+
+/**
+ * Returns the number of non-invalid indexes in the array.
+ */
+int countActualHexagons(H3Index* hexagons, int numHexagons) {
+    int actualNumHexagons = 0;
+    for (int i = 0; i < numHexagons; i++) {
+        if (hexagons[i] != H3_INVALID_INDEX) {
+            actualNumHexagons++;
         }
     }
+    return actualNumHexagons;
 }

@@ -57,6 +57,9 @@ dev-docs/_build/
 env_docs/
 node_modules/
 website/dist/
+website/package-lock.json
+website/.cache/
+website/public/
 # Generated Doxyfile
 dev-docs/Doxyfile
 
@@ -97,6 +100,7 @@ binding-functions
 KML/res*cells.kml
 KML/res*centers.kml
 
+<<<<<<< HEAD
 # Build temporaries
 /RH5_*
 /RH6_*
@@ -108,3 +112,5 @@ KML/res*centers.kml
 # dist
 /rpmbuild
 /dpkgbuild
+# Generated files
+ src/h3lib/include/h3api.h

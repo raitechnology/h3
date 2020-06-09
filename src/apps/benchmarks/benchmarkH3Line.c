@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "benchmark.h"
+#include "h3api.h"
 
-module.exports = {
+// Fixtures
+H3Index startIndex = 0x89283082803ffff;
+H3Index endNear = 0x892830814b3ffff;
+H3Index endFar = 0x8929a5653c3ffff;
 
-  title: 'H3',
+BEGIN_BENCHMARKS();
 
-  meta: [{
-    name: 'description',
-    content: 'A hexagonal hierarchical geospatial indexing system'
-  }],
+H3Index* out =
+    calloc(H3_EXPORT(h3LineSize)(startIndex, endFar), sizeof(H3Index));
 
-  scripts: [
-    // Adds Mathjax support
-    'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=MML_HTMLorMML'
-  ]
+BENCHMARK(h3LineNear, 10000, { H3_EXPORT(h3Line)(startIndex, endNear, out); });
+BENCHMARK(h3LineFar, 1000, { H3_EXPORT(h3Line)(startIndex, endFar, out); });
 
-};
+free(out);
+
+END_BENCHMARKS();

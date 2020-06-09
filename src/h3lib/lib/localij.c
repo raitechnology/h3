@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Uber Technologies, Inc.
+ * Copyright 2018-2019 Uber Technologies, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,16 @@
  * These functions try to provide a useful coordinate space in the vicinity of
  * an origin index.
  */
-#include <faceijk.h>
+#include <assert.h>
 #include <inttypes.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "baseCells.h"
 #include "faceijk.h"
 #include "h3Index.h"
 #include "mathExtensions.h"
-#include "stackAlloc.h"
 
 /**
  * Origin leading digit -> index leading digit -> rotations 60 cw
@@ -87,24 +87,28 @@ const int PENTAGON_ROTATIONS_REVERSE_POLAR[7][7] = {
     {0, 1, 1, 0, 1, 1, 1},         // 6
 };
 
-// Simply prohibit many pentagon distortion cases rather than handling them.
-const bool FAILED_DIRECTIONS_II[7][7] = {
+/**
+ * Prohibited directions when unfolding a pentagon.
+ *
+ * Indexes by two directions, both relative to the pentagon base cell. The first
+ * is the direction of the origin index and the second is the direction of the
+ * index to unfold. Direction refers to the direction from base cell to base
+ * cell if the indexes are on different base cells, or the leading digit if
+ * within the pentagon base cell.
+ *
+ * This previously included a Class II/Class III check but these were removed
+ * due to failure cases. It's possible this could be restricted to a narrower
+ * set of a failure cases. Currently, the logic is any unfolding across more
+ * than one icosahedron face is not permitted.
+ */
+const bool FAILED_DIRECTIONS[7][7] = {
     {false, false, false, false, false, false, false},  // 0
     {false, false, false, false, false, false, false},  // 1
-    {false, false, false, false, true, false, false},   // 2
-    {false, false, false, false, false, false, true},   // 3
-    {false, false, false, true, false, false, false},   // 4
-    {false, false, true, false, false, false, false},   // 5
-    {false, false, false, false, false, true, false},   // 6
-};
-const bool FAILED_DIRECTIONS_III[7][7] = {
-    {false, false, false, false, false, false, false},  // 0
-    {false, false, false, false, false, false, false},  // 1
-    {false, false, false, false, false, true, false},   // 2
-    {false, false, false, false, true, false, false},   // 3
-    {false, false, true, false, false, false, false},   // 4
-    {false, false, false, false, false, false, true},   // 5
-    {false, false, false, true, false, false, false},   // 6
+    {false, false, false, false, true, true, false},    // 2
+    {false, false, false, false, true, false, true},    // 3
+    {false, false, true, true, false, false, false},    // 4
+    {false, false, true, false, false, false, true},    // 5
+    {false, false, false, true, false, true, false},    // 6
 };
 
 /**
@@ -135,8 +139,8 @@ int h3ToLocalIjk(H3Index origin, H3Index h3, CoordIJK* out) {
     int baseCell = H3_GET_BASE_CELL(h3);
 
     // Direction from origin base cell to index base cell
-    Direction dir = 0;
-    Direction revDir = 0;
+    Direction dir = CENTER_DIGIT;
+    Direction revDir = CENTER_DIGIT;
     if (originBaseCell != baseCell) {
         dir = _getBaseCellDirection(originBaseCell, baseCell);
         if (dir == INVALID_DIGIT) {
@@ -183,12 +187,10 @@ int h3ToLocalIjk(H3Index origin, H3Index h3, CoordIJK* out) {
         if (originOnPent) {
             int originLeadingDigit = _h3LeadingNonZeroDigit(origin);
 
-            if ((isResClassIII(res) &&
-                 FAILED_DIRECTIONS_III[originLeadingDigit][dir]) ||
-                (!isResClassIII(res) &&
-                 FAILED_DIRECTIONS_II[originLeadingDigit][dir])) {
-                // TODO this part of the pentagon might not be unfolded
-                // correctly.
+            if (FAILED_DIRECTIONS[originLeadingDigit][dir]) {
+                // TODO: We may be unfolding the pentagon incorrectly in this
+                // case; return an error code until this is guaranteed to be
+                // correct.
                 return 3;
             }
 
@@ -197,12 +199,10 @@ int h3ToLocalIjk(H3Index origin, H3Index h3, CoordIJK* out) {
         } else if (indexOnPent) {
             int indexLeadingDigit = _h3LeadingNonZeroDigit(h3);
 
-            if ((isResClassIII(res) &&
-                 FAILED_DIRECTIONS_III[indexLeadingDigit][revDir]) ||
-                (!isResClassIII(res) &&
-                 FAILED_DIRECTIONS_II[indexLeadingDigit][revDir])) {
-                // TODO this part of the pentagon might not be unfolded
-                // correctly.
+            if (FAILED_DIRECTIONS[indexLeadingDigit][revDir]) {
+                // TODO: We may be unfolding the pentagon incorrectly in this
+                // case; return an error code until this is guaranteed to be
+                // correct.
                 return 4;
             }
 
@@ -245,10 +245,9 @@ int h3ToLocalIjk(H3Index origin, H3Index h3, CoordIJK* out) {
         int originLeadingDigit = _h3LeadingNonZeroDigit(origin);
         int indexLeadingDigit = _h3LeadingNonZeroDigit(h3);
 
-        if (FAILED_DIRECTIONS_III[originLeadingDigit][indexLeadingDigit] ||
-            FAILED_DIRECTIONS_II[originLeadingDigit][indexLeadingDigit]) {
-            // TODO this part of the pentagon might not be unfolded
-            // correctly.
+        if (FAILED_DIRECTIONS[originLeadingDigit][indexLeadingDigit]) {
+            // TODO: We may be unfolding the pentagon incorrectly in this case;
+            // return an error code until this is guaranteed to be correct.
             return 5;
         }
 
@@ -291,7 +290,7 @@ int localIjkToH3(H3Index origin, const CoordIJK* ijk, H3Index* out) {
 
     // check for res 0/base cell
     if (res == 0) {
-        if (ijk->i > 1 || ijk->i > 1 || ijk->i > 1) {
+        if (ijk->i > 1 || ijk->j > 1 || ijk->k > 1) {
             // out of range input
             return 1;
         }
@@ -541,4 +540,111 @@ int H3_EXPORT(h3Distance)(H3Index origin, H3Index h3) {
     }
 
     return ijkDistance(&originIjk, &h3Ijk);
+}
+
+/**
+ * Number of indexes in a line from the start index to the end index,
+ * to be used for allocating memory. Returns a negative number if the
+ * line cannot be computed.
+ *
+ * @param start Start index of the line
+ * @param end End index of the line
+ * @return Size of the line, or a negative number if the line cannot
+ * be computed.
+ */
+int H3_EXPORT(h3LineSize)(H3Index start, H3Index end) {
+    int distance = H3_EXPORT(h3Distance)(start, end);
+    return distance >= 0 ? distance + 1 : distance;
+}
+
+/**
+ * Given cube coords as doubles, round to valid integer coordinates. Algorithm
+ * from https://www.redblobgames.com/grids/hexagons/#rounding
+ * @param i   Floating-point I coord
+ * @param j   Floating-point J coord
+ * @param k   Floating-point K coord
+ * @param ijk IJK coord struct, modified in place
+ */
+static void cubeRound(double i, double j, double k, CoordIJK* ijk) {
+    int ri = round(i);
+    int rj = round(j);
+    int rk = round(k);
+
+    double iDiff = fabs((double)ri - i);
+    double jDiff = fabs((double)rj - j);
+    double kDiff = fabs((double)rk - k);
+
+    // Round, maintaining valid cube coords
+    if (iDiff > jDiff && iDiff > kDiff) {
+        ri = -rj - rk;
+    } else if (jDiff > kDiff) {
+        rj = -ri - rk;
+    } else {
+        rk = -ri - rj;
+    }
+
+    ijk->i = ri;
+    ijk->j = rj;
+    ijk->k = rk;
+}
+
+/**
+ * Given two H3 indexes, return the line of indexes between them (inclusive).
+ *
+ * This function may fail to find the line between two indexes, for
+ * example if they are very far apart. It may also fail when finding
+ * distances for indexes on opposite sides of a pentagon.
+ *
+ * Notes:
+ *
+ *  - The specific output of this function should not be considered stable
+ *    across library versions. The only guarantees the library provides are
+ *    that the line length will be `h3Distance(start, end) + 1` and that
+ *    every index in the line will be a neighbor of the preceding index.
+ *  - Lines are drawn in grid space, and may not correspond exactly to either
+ *    Cartesian lines or great arcs.
+ *
+ * @param start Start index of the line
+ * @param end End index of the line
+ * @param out Output array, which must be of size h3LineSize(start, end)
+ * @return 0 on success, or another value on failure.
+ */
+int H3_EXPORT(h3Line)(H3Index start, H3Index end, H3Index* out) {
+    int distance = H3_EXPORT(h3Distance)(start, end);
+    // Early exit if we can't calculate the line
+    if (distance < 0) {
+        return distance;
+    }
+
+    // Get IJK coords for the start and end. We've already confirmed
+    // that these can be calculated with the distance check above.
+    CoordIJK startIjk = {0};
+    CoordIJK endIjk = {0};
+
+    // Convert H3 addresses to IJK coords
+    h3ToLocalIjk(start, start, &startIjk);
+    h3ToLocalIjk(start, end, &endIjk);
+
+    // Convert IJK to cube coordinates suitable for linear interpolation
+    ijkToCube(&startIjk);
+    ijkToCube(&endIjk);
+
+    double iStep =
+        distance ? (double)(endIjk.i - startIjk.i) / (double)distance : 0;
+    double jStep =
+        distance ? (double)(endIjk.j - startIjk.j) / (double)distance : 0;
+    double kStep =
+        distance ? (double)(endIjk.k - startIjk.k) / (double)distance : 0;
+
+    CoordIJK currentIjk = {startIjk.i, startIjk.j, startIjk.k};
+    for (int n = 0; n <= distance; n++) {
+        cubeRound((double)startIjk.i + iStep * n,
+                  (double)startIjk.j + jStep * n,
+                  (double)startIjk.k + kStep * n, &currentIjk);
+        // Convert cube -> ijk -> h3 index
+        cubeToIjk(&currentIjk);
+        localIjkToH3(start, &currentIjk, &out[n]);
+    }
+
+    return 0;
 }

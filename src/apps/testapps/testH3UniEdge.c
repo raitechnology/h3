@@ -20,10 +20,10 @@
  */
 
 #include <stdlib.h>
+
 #include "constants.h"
 #include "geoCoord.h"
 #include "h3Index.h"
-#include "stackAlloc.h"
 #include "test.h"
 
 // Fixtures
@@ -32,7 +32,7 @@ static GeoCoord sfGeo = {0.659966917655, -2.1364398519396};
 SUITE(h3UniEdge) {
     TEST(h3IndexesAreNeighbors) {
         H3Index sf = H3_EXPORT(geoToH3)(&sfGeo, 9);
-        STACK_ARRAY_CALLOC(H3Index, ring, H3_EXPORT(maxKringSize)(1));
+        H3Index ring[7] = {0};
         H3_EXPORT(hexRing)(sf, 1, ring);
 
         t_assert(H3_EXPORT(h3IndexesAreNeighbors)(sf, sf) == 0,
@@ -47,7 +47,7 @@ SUITE(h3UniEdge) {
         t_assert(neighbors == 6,
                  "got the expected number of neighbors from a k-ring of 1");
 
-        STACK_ARRAY_CALLOC(H3Index, largerRing, H3_EXPORT(maxKringSize)(2));
+        H3Index largerRing[19] = {0};
         H3_EXPORT(hexRing)(sf, 2, largerRing);
 
         neighbors = 0;
@@ -64,6 +64,8 @@ SUITE(h3UniEdge) {
         H3_SET_MODE(sfBroken, H3_UNIEDGE_MODE);
         t_assert(H3_EXPORT(h3IndexesAreNeighbors)(sf, sfBroken) == 0,
                  "broken H3Indexes can't be neighbors");
+        t_assert(H3_EXPORT(h3IndexesAreNeighbors)(sfBroken, sf) == 0,
+                 "broken H3Indexes can't be neighbors (reversed)");
 
         H3Index sfBigger = H3_EXPORT(geoToH3)(&sfGeo, 7);
         t_assert(H3_EXPORT(h3IndexesAreNeighbors)(sf, sfBigger) == 0,
@@ -75,7 +77,7 @@ SUITE(h3UniEdge) {
 
     TEST(getH3UnidirectionalEdgeAndFriends) {
         H3Index sf = H3_EXPORT(geoToH3)(&sfGeo, 9);
-        STACK_ARRAY_CALLOC(H3Index, ring, H3_EXPORT(maxKringSize)(1));
+        H3Index ring[7] = {0};
         H3_EXPORT(hexRing)(sf, 1, ring);
         H3Index sf2 = ring[0];
 
@@ -93,7 +95,7 @@ SUITE(h3UniEdge) {
         t_assert(originDestination[1] == sf2,
                  "got the destination last in the pair request");
 
-        STACK_ARRAY_CALLOC(H3Index, largerRing, H3_EXPORT(maxKringSize)(2));
+        H3Index largerRing[19] = {0};
         H3_EXPORT(hexRing)(sf, 2, largerRing);
         H3Index sf3 = largerRing[0];
 
@@ -133,7 +135,7 @@ SUITE(h3UniEdge) {
 
     TEST(h3UnidirectionalEdgeIsValid) {
         H3Index sf = H3_EXPORT(geoToH3)(&sfGeo, 9);
-        STACK_ARRAY_CALLOC(H3Index, ring, H3_EXPORT(maxKringSize)(1));
+        H3Index ring[7] = {0};
         H3_EXPORT(hexRing)(sf, 1, ring);
         H3Index sf2 = ring[0];
 
@@ -147,6 +149,11 @@ SUITE(h3UniEdge) {
         H3_SET_MODE(fakeEdge, H3_UNIEDGE_MODE);
         t_assert(H3_EXPORT(h3UnidirectionalEdgeIsValid)(fakeEdge) == 0,
                  "edges without an edge specified don't work");
+        H3Index invalidEdge = sf;
+        H3_SET_MODE(invalidEdge, H3_UNIEDGE_MODE);
+        H3_SET_RESERVED_BITS(invalidEdge, INVALID_DIGIT);
+        t_assert(H3_EXPORT(h3UnidirectionalEdgeIsValid)(invalidEdge) == 0,
+                 "edges with an invalid edge specified don't work");
 
         H3Index pentagon = 0x821c07fffffffff;
         H3Index goodPentagonalEdge = pentagon;
@@ -160,11 +167,16 @@ SUITE(h3UniEdge) {
         H3_SET_RESERVED_BITS(badPentagonalEdge, 1);
         t_assert(H3_EXPORT(h3UnidirectionalEdgeIsValid)(badPentagonalEdge) == 0,
                  "missing pentagonal edge does not validate");
+
+        H3Index highBitEdge = edge;
+        H3_SET_HIGH_BIT(highBitEdge, 1);
+        t_assert(H3_EXPORT(h3UnidirectionalEdgeIsValid)(highBitEdge) == 0,
+                 "high bit set edge does not validate");
     }
 
     TEST(getH3UnidirectionalEdgesFromHexagon) {
         H3Index sf = H3_EXPORT(geoToH3)(&sfGeo, 9);
-        STACK_ARRAY_CALLOC(H3Index, edges, 6);
+        H3Index edges[6] = {0};
         H3_EXPORT(getH3UnidirectionalEdgesFromHexagon)(sf, edges);
 
         for (int i = 0; i < 6; i++) {
@@ -182,7 +194,7 @@ SUITE(h3UniEdge) {
 
     TEST(getH3UnidirectionalEdgesFromPentagon) {
         H3Index pentagon = 0x821c07fffffffff;
-        STACK_ARRAY_CALLOC(H3Index, edges, 6);
+        H3Index edges[6] = {0};
         H3_EXPORT(getH3UnidirectionalEdgesFromHexagon)(pentagon, edges);
 
         int missingEdgeCount = 0;
@@ -211,7 +223,7 @@ SUITE(h3UniEdge) {
         H3Index sf;
         GeoBoundary boundary;
         GeoBoundary edgeBoundary;
-        STACK_ARRAY_CALLOC(H3Index, edges, 6);
+        H3Index edges[6] = {0};
 
         const int expectedVertices[][2] = {{3, 4}, {1, 2}, {2, 3},
                                            {5, 0}, {4, 5}, {0, 1}};
@@ -242,7 +254,7 @@ SUITE(h3UniEdge) {
         H3Index pentagon;
         GeoBoundary boundary;
         GeoBoundary edgeBoundary;
-        STACK_ARRAY_CALLOC(H3Index, edges, 6);
+        H3Index edges[6] = {0};
 
         const int expectedVertices[][3] = {{-1, -1, -1}, {2, 3, 4}, {4, 5, 6},
                                            {8, 9, 0},    {6, 7, 8}, {0, 1, 2}};
@@ -282,7 +294,7 @@ SUITE(h3UniEdge) {
         H3Index pentagon;
         GeoBoundary boundary;
         GeoBoundary edgeBoundary;
-        STACK_ARRAY_CALLOC(H3Index, edges, 6);
+        H3Index edges[6] = {0};
 
         const int expectedVertices[][3] = {{-1, -1}, {1, 2}, {2, 3},
                                            {4, 0},   {3, 4}, {0, 1}};
