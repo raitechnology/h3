@@ -30,6 +30,7 @@ rpmbuild/SOURCES/$(name_ver).tar.gz:
 	mkdir -p $(rpm_src_dir)/src/h3lib
 	for i in $(srctree) ; do ln -sf ../../../$$i $(rpm_src_dir) ; done
 	ln -sf ../../../../../src/h3lib/lib $(rpm_src_dir)/src/h3lib/lib
+	sed -e "s/@H3_VERSION_MAJOR@/$(major_num)/" -e "s/@H3_VERSION_MINOR@/$(minor_num)/" -e "s/@H3_VERSION_PATCH@/$(patch_num)/" src/h3lib/include/h3api.h.in > src/h3lib/include/h3api.h
 	ln -sf ../../../../src/h3lib/include $(rpm_src_dir)/include/h3lib
 	( cd rpmbuild/SOURCES && tar chzf $(name_ver).tar.gz --exclude=".*.sw*" $(name)-${version} && rm -r -f $(name)-${version} )
 

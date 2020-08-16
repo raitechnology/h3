@@ -122,7 +122,7 @@ $(dependd)/depend.make: $(dependd) src/h3lib/include/h3api.h $(all_depends)
 	@cat $(all_depends) >> $(dependd)/depend.make
 
 .PHONY: dist_bins
-dist_bins: src/h3lib/include/h3api.h $(all_libs) $(all_dlls)
+dist_bins: $(all_libs) $(all_dlls)
 	chrpath -d $(libd)/libh3.so
 
 .PHONY: dist_rpm
