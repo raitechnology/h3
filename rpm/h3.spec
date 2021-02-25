@@ -5,7 +5,7 @@ Summary:	Uber H3 Geospatual Indexing
 
 Group:		Development/Libraries
 License:	ASL 2.0
-URL:		https://github.com/injinj/%{name}
+URL:		https://github.com/raitechnology/%{name}
 Source0:	%{name}-%{version}-99999.tar.gz
 BuildRoot:	${_tmppath}
 BuildRequires:  gcc-c++
