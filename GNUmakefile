@@ -78,7 +78,7 @@ libh3_objs  := $(addprefix $(objd)/, $(addsuffix .o, $(libh3_files)))
 libh3_dbjs  := $(addprefix $(objd)/, $(addsuffix .fpic.o, $(libh3_files)))
 libh3_deps  := $(addprefix $(dependd)/, $(addsuffix .d, $(libh3_files))) \
                $(addprefix $(dependd)/, $(addsuffix .fpic.d, $(libh3_files)))
-libh3_spec  := $(version)-$(build_num)
+libh3_spec  := $(version)-$(build_num)_$(git_hash)
 libh3_ver   := $(major_num).$(minor_num)
 
 $(libd)/libh3.a: $(libh3_objs)
