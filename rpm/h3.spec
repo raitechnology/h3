@@ -10,6 +10,7 @@ Source0:	%{name}-%{version}-99999.tar.gz
 BuildRoot:	${_tmppath}
 BuildRequires:  gcc-c++
 BuildRequires:  chrpath
+BuildRequires:  git-core
 Prefix:	        /usr
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
