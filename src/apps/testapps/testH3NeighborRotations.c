@@ -25,7 +25,9 @@
  *  If `FAILED` is present in the output, the numbers following it
  *  are the number of test cases that failed validation.
  */
-
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>

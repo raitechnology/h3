@@ -23,7 +23,9 @@
  *  to convert the input lat/lon to an H3 index, and then validates the
  *  index against the original input index.
  */
-
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 

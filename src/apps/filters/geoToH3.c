@@ -31,7 +31,9 @@
  *       ...
  *       latN lonN
  */
-
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include "args.h"
 #include "h3Index.h"
 #include "utility.h"

@@ -48,7 +48,10 @@
  *          resolution 9 hexagons covering Uber HQ and the surrounding region of
  *          San Francisco.
  */
-
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#define strdup _strdup
+#endif
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>

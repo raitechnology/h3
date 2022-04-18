@@ -271,8 +271,8 @@ static const LinkedGeoPolygon* findPolygonForHole(
         findDeepestContainer(candidates, candidateBBoxes, candidateCount);
 
     // Free allocated memory
-    H3_MEMORY(free)(candidates);
-    H3_MEMORY(free)(candidateBBoxes);
+    H3_MEMORY(free)((void*)candidates);
+    H3_MEMORY(free)((void*)candidateBBoxes);
 
     return parent;
 }

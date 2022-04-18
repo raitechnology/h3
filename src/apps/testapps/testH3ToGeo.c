@@ -23,7 +23,9 @@
  *  the program calls `h3ToGeo` to convert H3 index to a lat/lng, then
  *  validates against the input lat/lng within a given threshold
  */
-
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 

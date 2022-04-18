@@ -246,7 +246,7 @@ void H3_EXPORT(getH3UnidirectionalEdgeBoundary)(H3Index edge, GeoBoundary* gb) {
     // TODO: More efficient solution :)
     GeoBoundary origin = {0};
     GeoBoundary destination = {0};
-    GeoCoord postponedVertex = {0,0};
+    GeoCoord postponedVertex = {0, 0};
     bool hasPostponedVertex = false;
 
     H3_EXPORT(h3ToGeoBoundary)

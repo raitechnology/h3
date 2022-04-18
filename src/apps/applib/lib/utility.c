@@ -16,7 +16,9 @@
 /** @file utility.c
  * @brief   Miscellaneous useful functions.
  */
-
+#ifdef _MSC_VER
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include "utility.h"
 
 #include <assert.h>

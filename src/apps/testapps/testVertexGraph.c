@@ -68,7 +68,7 @@ SUITE(vertexGraph) {
     }
 
     TEST(vertexHashNegative) {
-        int numBuckets = 10;
+        uint32_t numBuckets = 10;
         t_assert(_hashVertex(&vertex5, 5, numBuckets) < numBuckets,
                  "zero vertex hashes correctly");
         t_assert(_hashVertex(&vertex6, 5, numBuckets) < numBuckets,
