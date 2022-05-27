@@ -34,7 +34,7 @@ cc          := $(CC)
 cpp         := $(CXX)
 
 #cppflags    := -fno-rtti -fno-exceptions -fsanitize=address
-arch_cflags := -fno-omit-frame-pointer
+arch_cflags := -fno-omit-frame-pointer -std=c99
 #cpplink     := $(CC) -lasan
 cpplink     := $(CC)
 gcc_wflags  := -Wall -Wextra -Werror
