@@ -58,5 +58,5 @@ fi
 /sbin/ldconfig
 
 %changelog
-* __DATE__ <chris@raitechnology.com>
+* Sat Jan 01 2000 <chris@raitechnology.com>
 - Hello world
