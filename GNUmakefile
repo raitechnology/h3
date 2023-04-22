@@ -43,7 +43,7 @@ ifeq (MSYS2,$(lsb_dist))
   mingw := true
 endif
 CC          ?= gcc
-cc          := $(CC)
+cc          := $(CC) -std=c99
 clink       := $(CC)
 arch_cflags := -fno-omit-frame-pointer
 gcc_wflags  := -Wall -Werror -Wextra
