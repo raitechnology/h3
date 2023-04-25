@@ -514,6 +514,8 @@ void _faceIjkPentToGeoBoundary(const FaceIJK* h, int res, GeoBoundary* g) {
     // edge-crossing vertices as needed
     g->numVerts = 0;
     FaceIJK lastFijk;
+    lastFijk.face = 0;
+    lastFijk.coord.i = lastFijk.coord.j = lastFijk.coord.k = 0;
     for (int vert = 0; vert < NUM_PENT_VERTS + 1; vert++) {
         int v = vert % NUM_PENT_VERTS;
 
