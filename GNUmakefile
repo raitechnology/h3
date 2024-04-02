@@ -98,22 +98,23 @@ all_libs    :=
 all_dlls    :=
 all_depends :=
 
-libh3_files := algos coordijk bbox polygon h3Index vec2d vec3d \
-	       linkedGeo geoCoord h3UniEdge mathExtensions vertexGraph \
-	       faceijk baseCells localij
-libh3_objs  := $(addprefix $(objd)/, $(addsuffix .o, $(libh3_files)))
-libh3_dbjs  := $(addprefix $(objd)/, $(addsuffix .fpic.o, $(libh3_files)))
-libh3_deps  := $(addprefix $(dependd)/, $(addsuffix .d, $(libh3_files))) \
-               $(addprefix $(dependd)/, $(addsuffix .fpic.d, $(libh3_files)))
-libh3_spec  := $(version)-$(build_num)_$(git_hash)
-libh3_ver   := $(major_num).$(minor_num)
+libh3lib_files := algos baseCells bbox coordijk directedEdge faceijk \
+                  h3Assert h3Index iterators latLng linkedGeo localij \
+	          mathExtensions polygon vec2d vec3d vertex vertexGraph
 
-$(libd)/libh3.a: $(libh3_objs)
-$(libd)/libh3.$(dll): $(libh3_dbjs)
+libh3lib_objs  := $(addprefix $(objd)/, $(addsuffix .o, $(libh3lib_files)))
+libh3lib_dbjs  := $(addprefix $(objd)/, $(addsuffix .fpic.o, $(libh3lib_files)))
+libh3lib_deps  := $(addprefix $(dependd)/, $(addsuffix .d, $(libh3lib_files))) \
+               $(addprefix $(dependd)/, $(addsuffix .fpic.d, $(libh3lib_files)))
+libh3lib_spec  := $(version)-$(build_num)_$(git_hash)
+libh3lib_ver   := $(major_num).$(minor_num)
 
-all_libs    += $(libd)/libh3.a
-all_dlls    += $(libd)/libh3.$(dll)
-all_depends += $(libh3_deps)
+$(libd)/libh3lib.a: $(libh3lib_objs)
+$(libd)/libh3lib.$(dll): $(libh3lib_dbjs)
+
+all_libs    += $(libd)/libh3lib.a
+all_dlls    += $(libd)/libh3lib.$(dll)
+all_depends += $(libh3lib_deps)
 
 all_dirs := $(bind) $(libd) $(objd) $(dependd)
 
@@ -150,11 +151,11 @@ $(dependd)/depend.make: $(dependd) src/h3lib/include/h3api.h $(all_depends)
 
 .PHONY: dist_bins
 dist_bins: $(all_libs) $(all_dlls)
-	chrpath -d $(libd)/libh3.$(dll)
+	chrpath -d $(libd)/libh3lib.$(dll)
 
 .PHONY: dist_rpm
 dist_rpm: srpm
-	( cd rpmbuild && rpmbuild --define "-topdir `pwd`" -ba SPECS/h3.spec )
+	( cd rpmbuild && rpmbuild --define "-topdir `pwd`" -ba SPECS/h3lib.spec )
 
 # force a remake of depend using 'make -B depend'
 .PHONY: depend
@@ -174,7 +175,7 @@ endif
 install: dist_bins
 	install -d $(install_prefix)/lib
 	install -d $(install_prefix)/include/h3lib
-	for f in $(libd)/libh3.* ; do \
+	for f in $(libd)/libh3lib.* ; do \
 	if [ -h $$f ] ; then \
 	cp -a $$f $(install_prefix)/lib ; \
 	else \

@@ -8,9 +8,13 @@
 - **Dates**:
     - Started: 2020-02-02
     - Accepted: 2020-03-26
+    - Latest update: 2021-04-25
 - **Status**: Accepted
 - **Discussions**:
     - <https://github.com/uber/h3/pull/308>
+    - <https://github.com/uber/h3/pull/403>
+    - <https://github.com/uber/h3/pull/441>
+    - <https://github.com/uber/h3/issues/451>
 
 ## Motivation
 
@@ -48,7 +52,7 @@ The following technical terms should be used in the documentation, the H3 codeba
 - **grid**:
     - the graph with nodes corresponding to H3 cells, and edges given by pairs of adjacent cells
     - for example, `gridDistance` is the minimal number of edges in a graph path connecting two cells
-- **point**:
+- **lat/lng point**:
     - a representation of a geographic point in terms of a latitude/longitude pair
 - **topological**:
     - H3 cells are **topological** pentagons or hexagons, in the sense that they have 5 or 6 neighbors, respectively, in the H3 **grid**
@@ -61,6 +65,15 @@ The following technical terms should be used in the documentation, the H3 codeba
     - each base cell has a "base cell number" (0--121), which is encoded into the `H3Index` representation of every H3 cell
     - there is a one-to-one correspondence between the "base cell number" and the `H3Index` representation of resolution `0` cells
         + e.g., base cell 0 has `H3Index` hexadecimal representation `'8001fffffffffff'`
+- **boundary**:
+    - all or part of the list of lat/lng points that enclose an H3 cell
+    - may include more than 6 points in the case that a cell is not a geometric hexagon, such as when a hexagon crosses an icosahedron boundary
+    - may also be used to describe the boundary between two geometric cells, as in the case of an edge
+    - represented in the H3 codebase with the `CellBoundary` struct (previously `GeoBoundary` before v4.0)
+- `H3_NULL`;
+    - equivalent to `0` and guaranteed to never be a valid `H3Index` (even after any future H3 **modes** are added)
+    - returned by functions to denote an error, or to denote missing data in arrays of `H3Index`
+    - analogous to `NaN` in floating point
 
 
 ### Use of "hex", "hexagon", "cell", "pentagon", etc.
@@ -87,9 +100,9 @@ The proposed prefix is `h3_`.
     + object properties (`getResolution`, `getBaseCellNumber`)
 - use `to` to denote transforms
     + different representations of the same object
-    + when doing a lossy transformation to a new object (`cellToParent`, `pointToCell`)
+    + when doing a lossy transformation to a new object (`cellToParent`, `latLngToCell`, `polygonToCells`)
 - do not use `get` or `to` for *computations*
-    + e.g., `polyfill`, `compact`, `cellAreaKm2`
+    + e.g., `compactCells`, `cellAreaKm2`
 
 There is some ambiguity between property, transform, and computation, so use your best judgement with these guidelines in mind.
 
@@ -117,6 +130,7 @@ There is some ambiguity between property, transform, and computation, so use you
 | `h3IsResClassIII`             | `isResClassIII`       |
 | `h3IndexesAreNeighbors`       | `areNeighborCells`    |
 | `h3ToParent`                  | `cellToParent`        |
+| `h3ToCenterChild`             | `cellToCenterChild`   |
 | `h3ToChildren`                | `cellToChildren`      |
 | `numHexagons`                 | `getNumCells`         |
 | `getRes0Indexes`              | `getRes0Cells`        |
@@ -124,8 +138,9 @@ There is some ambiguity between property, transform, and computation, so use you
 | `h3GetBaseCell`               | `getBaseCellNumber`   |
 | `h3GetResolution`             | `getResolution`       |
 | *DNE*                         | `getMode`             |
-| `geoToH3`                     | `pointToCell`         |
-| `h3ToGeo`                     | `cellToPoint`         |
+| `h3GetFaces`                  | `getIcosahedronFaces` |
+| `geoToH3`                     | `latLngToCell`        |
+| `h3ToGeo`                     | `cellToLatLng`        |
 | `compact`                     | `compactCells`        |
 | `uncompact`                   | `uncompactCells`      |
 | `polyfill`                    | `polygonToCells`      |
@@ -198,6 +213,16 @@ We may expose them in the future if a need becomes clear.
 | *DNE*        | `gridRingSafe`   | `gridDiskDistancesSafe`          |
 | *DNE*        | `gridRing`       | `gridRingUnsafe`, `gridRingSafe` |
 
+#### Local IJ
+
+|         3.x name          |   4.0.0 name    |
+|---------------------------|-----------------|
+| `experimentalLocalIjToH3` | `localIjToCell` |
+| `experimentalH3ToLocalIj` | `cellToLocalIj` |
+
+**Note**: The term *experimental* is dropped from the names because the functions
+have been in the H3 API for a significant period of time.
+
 ### H3 Edge Types
 
 Instead of `UnidirectionalEdge`, use the term `DirectedEdge`.
@@ -218,16 +243,22 @@ For a future undirected edge mode, use the term `Edge`.
 
 ### Area/Length Functions
 
-|  Current name  |        Proposed name        |
-|----------------|-----------------------------|
-| `hexAreaKm2`   | `getHexagonAreaAvgKm2`      |
-| `hexAreaM2`    | `getHexagonAreaAvgM2`       |
-| `edgeLengthKm` | `getHexagonEdgeLengthAvgKm` |
-| `edgeLengthM`  | `getHexagonEdgeLengthAvgM`  |
-| *DNE*          | `getPentagonAreaAvg*`       |
-| *DNE*          | `getPentagonEdgeLengthAvg*` |
-| *DNE*          | `cellAreaKm2`               |
-| *DNE*          | `cellAreaM2`                |
+|    3.x name.          |         4.0.0 name          |
+|-----------------------|-----------------------------|
+| `hexAreaKm2`          | `getHexagonAreaAvgKm2`      |
+| `hexAreaM2`           | `getHexagonAreaAvgM2`       |
+| `edgeLengthKm`        | `getHexagonEdgeLengthAvgKm` |
+| `edgeLengthM`         | `getHexagonEdgeLengthAvgM`  |
+| *DNE*                 | `getPentagonAreaAvg*`       |
+| *DNE*                 | `getPentagonEdgeLengthAvg*` |
+| *DNE*                 | `cellAreaKm2`               |
+| *DNE*                 | `cellAreaM2`                |
+| `pointDistKm`         | `greatCircleDistanceKm`     |
+| `pointDistM`          | `greatCircleDistanceM`      |
+| `pointDistRads`       | `greatCircleDistanceRads`   |
+| `exactEdgeLengthRads` | `edgeLengthRads`            |
+| `exactEdgeLengthKm`   | `edgeLengthKm`              |
+| `exactEdgeLengthM`    | `edgeLengthM`               |
 
 **Note**: `cellAreaKm2` and `cellAreaM2` would return the actual area of
 the passed-in cell.
@@ -245,21 +276,23 @@ discussion requiring benchmarking, so we will defer that to a
 
 - rename `GeoBoundary` to `CellBoundary` to indicate it is space-limited to describing the geometry of cells
 
-|    Current name   |   Proposed name   |               Notes               |
-|-------------------|-------------------|-----------------------------------|
-| `GeoBoundary`     | `CellBoundary`    | <= 10 stack-allocated `GeoPoint`s |
-| `GeoCoord`        | `GeoPoint`        |                                   |
-| `Geofence`        | `GeoLoop`         | heap-allocated `GeoPoint`s        |
-| `GeoPolygon`      | `GeoPolygon`      |                                   |
-| `GeoMultiPolygon` | `GeoMultiPolygon` | currently not used                |
+|    Current name   |   Proposed name   |              Notes              |
+|-------------------|-------------------|---------------------------------|
+| `GeoCoord`        | `LatLng`          |                                 |
+| `GeoBoundary`     | `CellBoundary`    | <= 10 stack-allocated `LatLng`s |
+| `Geofence`        | `GeoLoop`         | heap-allocated `LatLng`s        |
+| `GeoPolygon`      | `GeoPolygon`      |                                 |
+| `GeoMultiPolygon` | `GeoMultiPolygon` | currently not used              |
 
 
 ### Functions
 
-|            Current name           |      Proposed name       |         Notes          |
-|-----------------------------------|--------------------------|------------------------|
-| `h3ToGeoBoundary`                 | `cellToBoundary`         | returns `CellBoundary` |
-| *DNE*                             | `cellToLoop`             | returns `GeoLoop`      |
-| *DNE*                             | `loopToBoundary`         |                        |
-| *DNE*                             | `boundaryToLoop`         |                        |
-| `getH3UnidirectionalEdgeBoundary` | `directedEdgeToBoundary` | returns `CellBoundary` |
+|              3.x name             |       Proposed name         |         Notes              |
+|-----------------------------------|-----------------------------|----------------------------|
+| `h3ToGeoBoundary`                 | `cellToBoundary`            | returns `CellBoundary`     |
+| *DNE*                             | `cellToLoop`                | returns `GeoLoop`          |
+| *DNE*                             | `loopToBoundary`            |                            |
+| *DNE*                             | `boundaryToLoop`            |                            |
+| `getH3UnidirectionalEdgeBoundary` | `directedEdgeToBoundary`    | returns `CellBoundary`     |
+| `h3SetToLinkedGeo`                | `cellsToLinkedMultiPolygon` | returns `LinkedGeoPolygon` |
+| `h3SetToToMultiPolygon`           | `cellsToMultiPolygon`       | bindings only              |

@@ -1,14 +1,14 @@
 outdir ?= rpmbuild/SRPMS
-name   := h3
+name   := h3lib
 spec   := rpm/$(name).spec
 date   := $(shell date +"%a %b %d %Y")
 rpmdir := $(shell pwd)
 
 git_hash    := $(shell git rev-parse --short=8 HEAD)
-major_num   := 3
-minor_num   := 6
-patch_num   := 3
-build_num   := 8
+major_num   := 4
+minor_num   := 1
+patch_num   := 0
+build_num   := 9
 version     := $(major_num).$(minor_num).$(patch_num)
 ver_build   := $(version)-$(build_num)
 name_ver    := $(name)-$(ver_build)

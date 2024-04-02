@@ -16,15 +16,23 @@
 /** @file args.c
  * @brief   Miscellaneous useful functions.
  */
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
+
 #include "args.h"
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef _WIN32
+
+#define strcasecmp _stricmp
+
+#else
+
+#include <strings.h>
+
+#endif
 
 #include "h3api.h"
 
@@ -62,10 +70,10 @@
  * @return 0 if argument parsing succeeded, otherwise non-0. If help is printed,
  * return value is non-0.
  */
-int parseArgs(int argc, char* argv[], int numArgs, Arg* args[],
-              const Arg* helpArg, const char* helpText) {
-    const char* errorMessage = NULL;
-    const char* errorDetails = NULL;
+int parseArgs(int argc, char *argv[], int numArgs, Arg *args[],
+              const Arg *helpArg, const char *helpText) {
+    const char *errorMessage = NULL;
+    const char *errorDetails = NULL;
 
     int failed = _parseArgsList(argc, argv, numArgs, args, helpArg,
                                 &errorMessage, &errorDetails);
@@ -98,9 +106,9 @@ int parseArgs(int argc, char* argv[], int numArgs, Arg* args[],
  * null, and may be a pointer from `argv` or `args`.
  * @return 0 if argument parsing succeeded, otherwise non-0.
  */
-int _parseArgsList(int argc, char* argv[], int numArgs, Arg* args[],
-                   const Arg* helpArg, const char** errorMessage,
-                   const char** errorDetail) {
+int _parseArgsList(int argc, char *argv[], int numArgs, Arg *args[],
+                   const Arg *helpArg, const char **errorMessage,
+                   const char **errorDetail) {
     // Whether help was found and required arguments do not need to be checked
     bool foundHelp = false;
 
@@ -111,11 +119,11 @@ int _parseArgsList(int argc, char* argv[], int numArgs, Arg* args[],
             // Test this argument, which may have multiple names, for whether it
             // matches. argName will be set to the name used for this argument
             // if it matches.
-            const char* argName = NULL;
+            const char *argName = NULL;
             for (int k = 0; k < NUM_ARG_NAMES; k++) {
                 if (args[j]->names[k] == NULL) continue;
 
-                if (strcmp(argv[i], args[j]->names[k]) == 0) {
+                if (strcasecmp(argv[i], args[j]->names[k]) == 0) {
                     argName = args[j]->names[k];
                     break;
                 }
@@ -187,9 +195,9 @@ int _parseArgsList(int argc, char* argv[], int numArgs, Arg* args[],
  * @param errorMessage Error message, or null
  * @param errorDetails Additional error detail message, or null
  */
-void printHelp(FILE* out, const char* programName, const char* helpText,
-               int numArgs, Arg* args[], const char* errorMessage,
-               const char* errorDetails) {
+void printHelp(FILE *out, const char *programName, const char *helpText,
+               int numArgs, Arg *args[], const char *errorMessage,
+               const char *errorDetails) {
     if (errorMessage != NULL) {
         fprintf(out, "%s: %s", programName, errorMessage);
         if (errorDetails != NULL) {

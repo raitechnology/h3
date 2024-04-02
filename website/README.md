@@ -1,8 +1,10 @@
 # H3 Documentation Website
 
-This is the source for the [H3 documentation website](https://uber.github.io/h3/).
+This is the source for the [H3 documentation website](https://h3geo.org/).
 
-The source of the pages in the documentation is in the [docs](../docs) directory.
+The source of the pages in the documentation is in the [docs](./docs) directory.
+
+The website is built using [Docusaurus](https://docusaurus.io/).
 
 ## Building Locally
 
@@ -11,16 +13,19 @@ run the following from `./website`:
 
 ```
 yarn
-yarn run build
+yarn start
 ```
 
-You will then be able to open `public/index.html` in your browser. Note that images
-will not render because they expect a `/h3/` path prefix.
+You will then be able to open http://localhost:3000 in your browser.
+
+You can also test a production-ready build with:
+
+```
+yarn build
+```
 
 ## Updating the H3 Website
 
-Make sure your `gh-pages` branch has its remote set to the upstream repo, then
-
-```
-make publish-website
-```
+[Website deployment](https://docusaurus.io/docs/deployment#deploy) happens
+automatically via GitHub Actions whenever changes are landed to
+the `master` branch. 

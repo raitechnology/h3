@@ -25,15 +25,15 @@ set(EXAMPLES
     index
     distance
     neighbors
-    compact
+    compactCells
     edge)
 
 set(EXECUTABLE_OUTPUT_PATH bin)
-link_libraries(h3::h3)
 
 # Build each example
 foreach(name ${EXAMPLES})
     add_executable(${name} "${name}.c")
+    target_link_libraries(${name} PRIVATE h3::h3)
 endforeach()
 
 # Testing the examples
