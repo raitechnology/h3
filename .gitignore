@@ -101,13 +101,11 @@ KML/res*cells.kml
 KML/res*centers.kml
 
 # Build temporaries
-/RH5_*
-/RH6_*
-/RH7_*
-/RH8_*
+/RH*
 /FC*
 /UB*
 /DEB*
+/ROCKY*
 
 # dist
 /rpmbuild
