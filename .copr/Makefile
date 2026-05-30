@@ -8,7 +8,7 @@ git_hash    := $(shell git rev-parse --short=8 HEAD)
 major_num   := 4
 minor_num   := 1
 patch_num   := 0
-build_num   := 9
+build_num   := 10
 version     := $(major_num).$(minor_num).$(patch_num)
 ver_build   := $(version)-$(build_num)
 name_ver    := $(name)-$(ver_build)
@@ -37,3 +37,6 @@ rpmbuild/SOURCES/$(name_ver).tar.gz:
 	ln -sf ../../../../src/h3lib/include $(rpm_src_dir)/include/h3lib
 	( cd rpmbuild/SOURCES && tar chzf $(name_ver).tar.gz --exclude=".*.sw*" $(name)-$(version) && rm -r -f $(name)-$(version) )
 
+.PHONY: spec_version
+spec_version:
+	@echo "$(name)_dep := $(major_num).$(minor_num)"
